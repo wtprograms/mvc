@@ -18,6 +18,22 @@ export class Controller implements IController {
   }
 
   /**
+   * Returns a bad request with a failed validation object.
+   * @param param The parameter.
+   * @param msg The fail message.
+   * @param location The location of the failure.
+   */
+  failValidation(param: string, msg: string, location: string = 'body') {
+    return this.badRequest([
+      {
+        location,
+        msg,
+        param
+      }
+    ]);
+  }
+
+  /**
    * Returns a ViewResponse that will be used to render the view in express.
    * @param viewName The view's name.
    * @param model The view's model.

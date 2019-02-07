@@ -23,7 +23,7 @@ export class WebHostBuilder {
    * Adds application settings.
    * @param fileName The file name of the application's settings.
    */
-  addAppSettings(fileName: string = './app-settings.json') {
+  addAppSettings(fileName: string = './app.settings.json') {
     const settings = fs.readFileSync(path.resolve(fileName)).toString();
     this.appSettings = JSON.parse(settings);
     return this;
