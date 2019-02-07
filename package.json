@@ -3,6 +3,7 @@
   "description": "Brings MVC architecture to express.",
   "license": "ISC",
   "author": "WT Programs",
+  "private": false,
   "keywords": [
     "MVC",
     "Express"
