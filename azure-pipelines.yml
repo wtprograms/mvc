@@ -22,7 +22,7 @@ steps:
 
 - task: CopyFiles@2
   inputs:
-    contents: '.'
+    contents: '_buildOutput/**'
     targetFolder: $(Build.ArtifactStagingDirectory)
 
 - task: PublishBuildArtifacts@1
