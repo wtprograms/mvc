@@ -60,7 +60,7 @@ export class ActionRouter {
     if (routePath.endsWith('/')) {
       routePath = routePath.substring(0, routePath.length - 1);
     }
-    this.logger.info(
+    this.logger.verbose(
       `Routing action "${this.actionMetadata.name}" with controller "${
         this.controllerConstructor.name
       }" on route "${this.actionMetadata.httpMethod.toUpperCase()}: ${routePath}"...`

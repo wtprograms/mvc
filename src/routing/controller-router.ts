@@ -24,8 +24,8 @@ export class ControllerRouter {
     const router = Router();
     const actionMetadataCollection = Reflect.getOwnMetadata(ACTION_SYMBOL, this.controllerConstructor);
     this.logger.info(`Routing controller "${this.controllerConstructor.name}" with ${actionMetadataCollection.length} action(s)...`);
+    injectable()(this.controllerConstructor);
     for (const actionMetadata of actionMetadataCollection) {
-      injectable()(this.controllerConstructor);
       const actionRouter = new ActionRouter(this.controllerConstructor, actionMetadata, this.applicationContext);
       actionRouter.route(router);
     }

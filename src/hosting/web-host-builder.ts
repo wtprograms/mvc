@@ -39,7 +39,7 @@ export class WebHostBuilder {
   }
 
   /** Builds the WebHost. */
-  build() {
+  async build() {
     this.setupContainer();
     this.setupExpress();
     const context: ApplicationContext = {
@@ -52,7 +52,7 @@ export class WebHostBuilder {
     };
 
     const startup = new this.startupConstructor();
-    startup.configure(context);
+    await Promise.resolve(startup.configure(context));
 
     this.configureExpress(context);
 
