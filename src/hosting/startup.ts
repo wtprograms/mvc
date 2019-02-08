@@ -1,10 +1,12 @@
 import { ApplicationContext } from './application-context';
 
 /** Used by the web host for start up configuration. */
-export interface IStartup {
+export abstract class Startup {
   /**
-   * Configures the application.
+   * Initializes the startup.
    * @param context The application's context.
    */
-  configure(context: ApplicationContext): Promise<void> | void;
+  constructor(protected context: ApplicationContext) {}
+
+  abstract configure(): Promise<void> | void;
 }

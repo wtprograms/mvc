@@ -1,7 +1,7 @@
-import { IStartup } from './i-startup';
+import { Startup } from './startup';
 import path = require('path');
 import fs = require('fs');
-import { Container } from 'inversify';
+import { Container, injectable } from 'inversify';
 import { ApplicationContext } from './application-context';
 import express = require('express');
 import { WebHost } from './web-host';
@@ -17,7 +17,7 @@ export class WebHostBuilder {
   private express: express.Express;
   private loggerFactory = new LoggerFactory();
   private expressLogger = this.loggerFactory.createLogger('Express');
-  private startupConstructor: new () => IStartup;
+  private startupConstructor: new (context: ApplicationContext) => Startup;
 
   /**
    * Adds application settings.
@@ -33,7 +33,7 @@ export class WebHostBuilder {
    * Tells the builder to use this startup.
    * @param startupConstructor The application's startup.
    */
-  useStartup(startupConstructor: new () => IStartup) {
+  useStartup(startupConstructor: new (context: ApplicationContext) => Startup) {
     this.startupConstructor = startupConstructor;
     return this;
   }
@@ -51,8 +51,12 @@ export class WebHostBuilder {
       loggerFactory: this.loggerFactory
     };
 
-    const startup = new this.startupConstructor();
-    await Promise.resolve(startup.configure(context));
+    const startup = new this.startupConstructor(context);
+    await Promise.resolve(startup.configure());
+
+    for (const controller of context.controllers) {
+      injectable()(controller);
+    }
 
     this.configureExpress(context);
 

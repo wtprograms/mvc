@@ -1,12 +1,13 @@
 import { FILTER_SYMBOL } from './symbols';
 import { ActionFilter } from '../actioning';
 import { FilterMetadata } from './metadata';
+import { injectable } from 'inversify';
 
 /**
  * Defines a filter on the action.
  * @param filterConstructor The filter's constructor.
  */
-export function Filter(filterConstructor: new () => ActionFilter) {
+export function Filter(filterConstructor: new (...args) => ActionFilter) {
   return (target, name: string) => {
     const actions: FilterMetadata[] = Reflect.getOwnMetadata(FILTER_SYMBOL, target.constructor) || [];
 

@@ -76,13 +76,13 @@ export class ActionRouter {
     try {
       this.logger.info(`Route match with { action = "${this.actionMetadata.name}", controller = "${this.controllerConstructor.name}" }`);
       const controller = this.applicationContext.container.resolve(this.controllerConstructor);
-      controller.httpContext = new HttpContext(req, res, this.applicationContext.container);
+      controller.httpContext = new HttpContext(req, res);
       controller.modelState = new ModelState(req);
       this.logger.info(`Validation state: ${controller.modelState.isValid ? 'Valid' : 'Invalid'}`);
       const action = controller[this.actionMetadata.name];
       const filters = this.controllerAndGlobalFilterMetadataCollection
         .filter(x => x.actionName === this.actionMetadata.name || !x.actionName)
-        .map(x => new x.filterConstructor());
+        .map(x => this.applicationContext.container.resolve(x.filterConstructor));
       const actionContext = new ActionContext(controller.httpContext, this.actionMetadata, controller);
       try {
         this.logger.info('Executing pre-filters...');
