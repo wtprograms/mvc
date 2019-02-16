@@ -128,11 +128,11 @@ export class ActionRouter {
             return filterResponse;
           }
         }
-        this.logger.error('Error was unhandled.');
+        this.logger.error(`Error was unhandled: ${error.stack}`);
         next(error);
       }
     } catch (fatalError) {
-      this.logger.fatal(`A fatal error has occurred: ${fatalError}`);
+      this.logger.fatal(`A fatal error has occurred: ${fatalError.stack}`);
       throw fatalError;
     }
   }

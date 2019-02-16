@@ -12,7 +12,7 @@ export interface ApplicationContext {
   /** The application's settings. */
   appSettings?: any;
   /** The global application filters. */
-  filters?: (new () => ActionFilter)[];
+  filters?: (new (...args) => ActionFilter)[];
   /** The application's controllers. */
 
   controllers: (new (...args) => any)[];
