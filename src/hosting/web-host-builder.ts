@@ -9,6 +9,7 @@ import { LoggerFactory } from '../logging';
 import bodyParser = require('body-parser');
 import { EXPRESS_SYMBOL, APP_SETTINGS_SYMBOL } from './symbols';
 import { ControllerCollectionRouter } from '../routing';
+import { ConstructorArg1 } from '../helpers';
 
 /** Builds the web host */
 export class WebHostBuilder {
@@ -17,7 +18,7 @@ export class WebHostBuilder {
   private express: express.Express;
   private loggerFactory = new LoggerFactory();
   private expressLogger = this.loggerFactory.createLogger('Express');
-  private startupConstructor: new (context: ApplicationContext) => Startup;
+  private startupConstructor: ConstructorArg1<ApplicationContext, Startup>;
 
   /**
    * Adds application settings.
@@ -33,7 +34,7 @@ export class WebHostBuilder {
    * Tells the builder to use this startup.
    * @param startupConstructor The application's startup.
    */
-  useStartup(startupConstructor: new (context: ApplicationContext) => Startup) {
+  useStartup(startupConstructor: ConstructorArg1<ApplicationContext, Startup>) {
     this.startupConstructor = startupConstructor;
     return this;
   }

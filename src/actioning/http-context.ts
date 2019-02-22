@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import { Container } from 'inversify';
 
 /** Used to give context to the http's call. */
 export class HttpContext {

@@ -1,9 +1,8 @@
-import { IController } from './i-controller';
 import { HttpContext, ModelState } from '.';
 import { ViewResponse } from './routing';
 
 /** The base controller gives functionality to a controller. */
-export class Controller implements IController {
+export class Controller {
   /** @inheritdoc */
   httpContext: HttpContext;
   /** @inheritdoc */

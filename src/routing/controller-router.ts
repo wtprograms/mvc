@@ -1,9 +1,9 @@
 import { ApplicationContext } from '../hosting';
-import { IController } from '../i-controller';
 import { Router } from 'express';
 import { ACTION_SYMBOL } from '../decorators';
 import { ActionRouter } from './action-router';
 import { Logger } from '../logging';
+import { Constructor } from '../helpers';
 
 /** Routes a controller. */
 export class ControllerRouter {
@@ -14,7 +14,7 @@ export class ControllerRouter {
    * @param controllerConstructor The controller's constructor.
    * @param applicationContext The application's context.
    */
-  constructor(private controllerConstructor: new () => IController, private applicationContext: ApplicationContext) {
+  constructor(private controllerConstructor: Constructor<any>, private applicationContext: ApplicationContext) {
     this.logger = applicationContext.loggerFactory.createLoggerOfType(ControllerRouter);
   }
 

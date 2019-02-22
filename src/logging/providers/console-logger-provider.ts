@@ -17,7 +17,7 @@ export class ConsoleLoggerProvider extends LoggerProvider {
   }
 
   /** @inheritdoc */
-  createLogger(categoryName: any, loggingLevel: LogLevel): Logger {
+  createLogger(categoryName: string, loggingLevel: LogLevel): Logger {
     return new ConsoleLogger(categoryName, loggingLevel, this.colorMaps);
   }
 }

@@ -1,12 +1,11 @@
 import { Response } from 'express';
 import { ActionContext } from './action-context';
-import { IController } from '../i-controller';
 
 /**
  * An action filter is executed at different stages of the action.
  * @template TController The action's controller type.
  */
-export interface ActionFilter<TController extends IController = IController> {
+export interface ActionFilter<TController = any> {
   /**
    * Executed before the action.
    * @param actionContext The action's context.

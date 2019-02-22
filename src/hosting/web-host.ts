@@ -13,8 +13,7 @@ export class WebHost {
    * @param port The port number to host the web application on.
    */
   run(port: number) {
-    this.applicationContext.express.use('**', (req, res) => {});
-    this.applicationContext.express.listen(port, 'localhost', () => {
+    this.applicationContext.express.listen(port, () => {
       console.log(`Now listening on port: ${port}`);
     });
   }

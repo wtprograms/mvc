@@ -5,6 +5,7 @@ import { validationResult, Result } from 'express-validator/check';
 export class ModelState {
   /** Gets the validation's result.  */
   readonly validationResult: Result;
+
   /** The errors from the validation result. */
   readonly errors: any[];
 

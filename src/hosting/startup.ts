@@ -8,5 +8,6 @@ export abstract class Startup {
    */
   constructor(protected context: ApplicationContext) {}
 
+  /** Configures the startup. */
   abstract configure(): Promise<void> | void;
 }

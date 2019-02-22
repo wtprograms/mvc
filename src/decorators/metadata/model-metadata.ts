@@ -4,6 +4,7 @@ import { ValidationChain } from 'express-validator/check';
 export interface ModelMetadata {
   /** The model's index on the parameters. */
   index: number;
+
   /** The model's validation. */
   validation: ValidationChain[];
 }

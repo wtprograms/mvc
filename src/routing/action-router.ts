@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { ApplicationContext } from '../hosting';
-import { IController } from '../i-controller';
 import { ActionMetadata, ModelMetadata, MODEL_SYMBOL, CONTROLLER_ROUTE_SYMBOL, FilterMetadata, FILTER_SYMBOL } from '../decorators';
 import express = require('express');
-import { HttpContext, ModelState, ActionContext } from '../actioning';
+import { HttpContext, ModelState, ActionContext, ActionFilter } from '../actioning';
 import { ViewResponse } from './view-response';
 import { Logger } from '../logging';
+import { Constructor } from '../helpers';
 
 /** Routes actions. */
 export class ActionRouter {
@@ -35,7 +35,7 @@ export class ActionRouter {
    * @param applicationContext The application's context.
    */
   constructor(
-    private controllerConstructor: new () => IController,
+    private controllerConstructor: Constructor<any>,
     private actionMetadata: ActionMetadata,
     private applicationContext: ApplicationContext
   ) {
@@ -65,11 +65,25 @@ export class ActionRouter {
         this.controllerConstructor.name
       }" on route "${this.actionMetadata.httpMethod.toUpperCase()}: ${routePath}"...`
     );
+    const parameters: any[] = [router, routePath];
     if (modelMetadata && modelMetadata.validation) {
-      expressCallFunc.call(router, routePath, modelMetadata.validation, async (req, res, next) => await this.handleRequest(req, res, next));
-    } else {
-      expressCallFunc.call(router, routePath, async (req, res, next) => await this.handleRequest(req, res, next));
+      parameters.push(modelMetadata.validation);
     }
+    parameters.push(async (req, res, next) => await this.handleRequest(req, res, next));
+    expressCallFunc.apply(router, parameters);
+  }
+
+  private async executeFilters(method: string, filters: ActionFilter<any>[], actionContext: ActionContext, error?: Error) {
+    for (const filter of filters) {
+      const executor = filters[method];
+      const filterResponse = await Promise.resolve(executor.call(filter, actionContext, error));
+      if (filterResponse) {
+        this.logger.verbose('A filter has made a response.');
+        this.logResponse(filterResponse);
+        return filterResponse;
+      }
+    }
+    return undefined;
   }
 
   private async handleRequest(req: express.Request, res: express.Response, next: express.NextFunction) {
@@ -86,13 +100,9 @@ export class ActionRouter {
       const actionContext = new ActionContext(controller.httpContext, this.actionMetadata, controller);
       try {
         this.logger.info('Executing pre-filters...');
-        for (const filter of filters) {
-          const filterResponse = await Promise.resolve(filter.onActionExecuting(actionContext));
-          if (filterResponse) {
-            this.logger.verbose('A pre-filter has made a response.');
-            this.logResponse(filterResponse);
-            return filterResponse;
-          }
+        let filterResponse = await this.executeFilters('onActionExecuting', filters, actionContext);
+        if (filterResponse) {
+          return filterResponse;
         }
         this.logger.info('Executing action...');
         const parameters = this.getParameters(req);
@@ -107,26 +117,18 @@ export class ActionRouter {
           actionContext.response = res.json(actionResult);
         }
         this.logger.info('Executing post-filters...');
-        for (const filter of filters) {
-          const filterResponse = await Promise.resolve(filter.onActionExecuted(actionContext));
-          if (filterResponse) {
-            this.logger.verbose('A post-filter has made a response.');
-            this.logResponse(filterResponse);
-            return filterResponse;
-          }
+        filterResponse = await this.executeFilters('onActionExecuted', filters, actionContext);
+        if (filterResponse) {
+          return filterResponse;
         }
         this.logResponse(actionContext.response);
         return actionContext.response;
       } catch (error) {
         this.logger.warn(`An unexpected error has occurred: ${error}`);
         this.logger.info('Executing error-filters...');
-        for (const filter of filters) {
-          const filterResponse = await Promise.resolve(filter.onError(actionContext, error));
-          if (filterResponse) {
-            this.logger.verbose('An error-filter has made a response.');
-            this.logResponse(filterResponse);
-            return filterResponse;
-          }
+        const filterResponse = await this.executeFilters('onError', filters, actionContext, error);
+        if (filterResponse) {
+          return filterResponse;
         }
         this.logger.error(`Error was unhandled: ${error.stack}`);
         next(error);

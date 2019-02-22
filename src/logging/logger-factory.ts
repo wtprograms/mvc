@@ -2,6 +2,7 @@ import { Logger } from './logger';
 import { LoggerProvider } from './logger-provider';
 import { CombinedLogger } from './combined-logger';
 import { LogLevel } from './log-level';
+import { Constructor } from '../helpers';
 
 /** A factory for creating loggers. */
 export class LoggerFactory {
@@ -23,7 +24,7 @@ export class LoggerFactory {
    * @param constructor A constructor as the category name.
    * @template T The constructor's type.
    */
-  createLoggerOfType<T>(constructor: new (...args) => T) {
+  createLoggerOfType<T>(constructor: Constructor<T>) {
     return this.createLogger(constructor.name);
   }
 
