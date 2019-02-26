@@ -8,3 +8,4 @@ export * from './http-put';
 export * from './model';
 export * from './controller-route';
 export * from './filter';
+export * from './view';

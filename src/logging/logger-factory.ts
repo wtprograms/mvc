@@ -8,6 +8,7 @@ import { Constructor } from '../helpers';
 export class LoggerFactory {
   /** A collection of logger providers. */
   providers: LoggerProvider[] = [];
+
   /** The level of the logging. */
   loggingLevel: LogLevel = LogLevel.info;
 
@@ -33,6 +34,6 @@ export class LoggerFactory {
    * @param obj The instance with the constructor as the category name.
    */
   createLoggerOfThis(obj: any) {
-    return this.createLogger(obj.constructor.name);
+    return this.createLoggerOfType(obj.constructor);
   }
 }

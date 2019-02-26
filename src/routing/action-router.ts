@@ -3,9 +3,9 @@ import { ApplicationContext } from '../hosting';
 import { ActionMetadata, ModelMetadata, MODEL_SYMBOL, CONTROLLER_ROUTE_SYMBOL, FilterMetadata, FILTER_SYMBOL } from '../decorators';
 import express = require('express');
 import { HttpContext, ModelState, ActionContext, ActionFilter } from '../actioning';
-import { ViewResponse } from './view-response';
 import { Logger } from '../logging';
 import { Constructor } from '../helpers';
+import { Controller } from '../controller';
 
 /** Routes actions. */
 export class ActionRouter {
@@ -17,6 +17,11 @@ export class ActionRouter {
 
   private get controllerRoute(): string {
     return Reflect.getMetadata(CONTROLLER_ROUTE_SYMBOL, this.controllerConstructor);
+  }
+
+  private get viewMetadata(): string {
+    const viewMetadata = Reflect.getOwnMetadata(MODEL_SYMBOL, this.controllerConstructor, this.actionMetadata.name);
+    return viewMetadata;
   }
 
   private get controllerAndGlobalFilterMetadataCollection() {
@@ -35,7 +40,7 @@ export class ActionRouter {
    * @param applicationContext The application's context.
    */
   constructor(
-    private controllerConstructor: Constructor<any>,
+    private controllerConstructor: Constructor<Controller>,
     private actionMetadata: ActionMetadata,
     private applicationContext: ApplicationContext
   ) {
@@ -89,15 +94,15 @@ export class ActionRouter {
   private async handleRequest(req: express.Request, res: express.Response, next: express.NextFunction) {
     try {
       this.logger.info(`Route match with { action = "${this.actionMetadata.name}", controller = "${this.controllerConstructor.name}" }`);
-      const controller = this.applicationContext.container.resolve(this.controllerConstructor);
-      controller.httpContext = new HttpContext(req, res);
-      controller.modelState = new ModelState(req);
-      this.logger.info(`Validation state: ${controller.modelState.isValid ? 'Valid' : 'Invalid'}`);
+      const controller: Controller = this.applicationContext.container.resolve(this.controllerConstructor);
+      controller.httpContext = new HttpContext(req, res, new ModelState(req));
+      this.logger.info(`Validation state: ${controller.httpContext.modelState.isValid ? 'Valid' : 'Invalid'}`);
       const action = controller[this.actionMetadata.name];
       const filters = this.controllerAndGlobalFilterMetadataCollection
         .filter(x => x.actionName === this.actionMetadata.name || !x.actionName)
         .map(x => this.applicationContext.container.resolve(x.filterConstructor));
       const actionContext = new ActionContext(controller.httpContext, this.actionMetadata, controller);
+      const viewMetadata = this.viewMetadata;
       try {
         this.logger.info('Executing pre-filters...');
         let filterResponse = await this.executeFilters('onActionExecuting', filters, actionContext);
@@ -109,9 +114,6 @@ export class ActionRouter {
         const actionResult = await Promise.resolve(action.apply(controller, parameters));
         if (this.isResponse(actionResult)) {
           actionContext.response = actionResult;
-        } else if (this.isViewResponse(actionResult)) {
-          actionContext.response = res;
-          res.render(actionResult.viewName, actionResult.model);
         } else {
           this.logger.debug(`Result body: ${JSON.stringify(actionResult)}`);
           actionContext.response = res.json(actionResult);
@@ -122,7 +124,12 @@ export class ActionRouter {
           return filterResponse;
         }
         this.logResponse(actionContext.response);
-        return actionContext.response;
+        if (viewMetadata) {
+          this.logger.info(`Rendering view ${viewMetadata}...`);
+          res.render(viewMetadata, actionResult);
+        } else {
+          return actionContext.response;
+        }
       } catch (error) {
         this.logger.warn(`An unexpected error has occurred: ${error}`);
         this.logger.info('Executing error-filters...');
@@ -167,9 +174,5 @@ export class ActionRouter {
 
   private isResponse(obj: any): obj is express.Response {
     return obj && obj.send && obj.json;
-  }
-
-  private isViewResponse(obj: any): obj is ViewResponse {
-    return obj && obj.viewName;
   }
 }

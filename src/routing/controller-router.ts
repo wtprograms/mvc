@@ -4,6 +4,7 @@ import { ACTION_SYMBOL } from '../decorators';
 import { ActionRouter } from './action-router';
 import { Logger } from '../logging';
 import { Constructor } from '../helpers';
+import { Controller } from '../controller';
 
 /** Routes a controller. */
 export class ControllerRouter {
@@ -14,7 +15,7 @@ export class ControllerRouter {
    * @param controllerConstructor The controller's constructor.
    * @param applicationContext The application's context.
    */
-  constructor(private controllerConstructor: Constructor<any>, private applicationContext: ApplicationContext) {
+  constructor(private controllerConstructor: Constructor<Controller>, private applicationContext: ApplicationContext) {
     this.logger = applicationContext.loggerFactory.createLoggerOfType(ControllerRouter);
   }
 
