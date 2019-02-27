@@ -1,6 +1,14 @@
 import { Router } from 'express';
 import { ApplicationContext } from '../hosting';
-import { ActionMetadata, ModelMetadata, MODEL_SYMBOL, CONTROLLER_ROUTE_SYMBOL, FilterMetadata, FILTER_SYMBOL } from '../decorators';
+import {
+  ActionMetadata,
+  ModelMetadata,
+  MODEL_SYMBOL,
+  CONTROLLER_ROUTE_SYMBOL,
+  FilterMetadata,
+  FILTER_SYMBOL,
+  VIEW_SYMBOL
+} from '../decorators';
 import express = require('express');
 import { HttpContext, ModelState, ActionContext, ActionFilter } from '../actioning';
 import { Logger } from '../logging';
@@ -20,7 +28,7 @@ export class ActionRouter {
   }
 
   private get viewMetadata(): string {
-    const viewMetadata = Reflect.getOwnMetadata(MODEL_SYMBOL, this.controllerConstructor, this.actionMetadata.name);
+    const viewMetadata = Reflect.getOwnMetadata(VIEW_SYMBOL, this.controllerConstructor, this.actionMetadata.name);
     return viewMetadata;
   }
 
@@ -70,7 +78,7 @@ export class ActionRouter {
         this.controllerConstructor.name
       }" on route "${this.actionMetadata.httpMethod.toUpperCase()}: ${routePath}"...`
     );
-    const parameters: any[] = [router, routePath];
+    const parameters: any[] = [routePath];
     if (modelMetadata && modelMetadata.validation) {
       parameters.push(modelMetadata.validation);
     }
@@ -80,7 +88,7 @@ export class ActionRouter {
 
   private async executeFilters(method: string, filters: ActionFilter<any>[], actionContext: ActionContext, error?: Error) {
     for (const filter of filters) {
-      const executor = filters[method];
+      const executor = filter[method];
       const filterResponse = await Promise.resolve(executor.call(filter, actionContext, error));
       if (filterResponse) {
         this.logger.verbose('A filter has made a response.');
@@ -103,6 +111,9 @@ export class ActionRouter {
         .map(x => this.applicationContext.container.resolve(x.filterConstructor));
       const actionContext = new ActionContext(controller.httpContext, this.actionMetadata, controller);
       const viewMetadata = this.viewMetadata;
+      if (viewMetadata) {
+        this.logger.debug(`View: ${viewMetadata}`);
+      }
       try {
         this.logger.info('Executing pre-filters...');
         let filterResponse = await this.executeFilters('onActionExecuting', filters, actionContext);

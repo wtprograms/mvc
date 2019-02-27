@@ -5,5 +5,6 @@ export * from './hosting';
 export * from './routing';
 export * from './logging';
 export * from './controller';
+export * from './controller-base';
 export * from './logging';
 export * from './helpers';
