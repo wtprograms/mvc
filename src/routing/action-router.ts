@@ -89,9 +89,10 @@ export class ActionRouter {
   private async executeFilters(method: string, filters: ActionFilter<any>[], actionContext: ActionContext, error?: Error) {
     for (const filter of filters) {
       const executor = filter[method];
+      this.logger.verbose(`Executing filter '${filter.constructor.name}' on '${method}'...`);
       const filterResponse = await Promise.resolve(executor.call(filter, actionContext, error));
       if (filterResponse) {
-        this.logger.verbose('A filter has made a response.');
+        this.logger.info('A filter has made a response.');
         this.logResponse(filterResponse);
         return filterResponse;
       }
@@ -127,18 +128,20 @@ export class ActionRouter {
           actionContext.response = actionResult;
         } else {
           this.logger.debug(`Result body: ${JSON.stringify(actionResult)}`);
-          actionContext.response = res.json(actionResult);
+          if (!viewMetadata) {
+            actionContext.response = res.json(actionResult);
+          }
         }
         this.logger.info('Executing post-filters...');
         filterResponse = await this.executeFilters('onActionExecuted', filters, actionContext);
         if (filterResponse) {
           return filterResponse;
         }
-        this.logResponse(actionContext.response);
         if (viewMetadata) {
-          this.logger.info(`Rendering view ${viewMetadata}...`);
+          this.logger.info(`Rendering view '${viewMetadata}'...`);
           res.render(viewMetadata, actionResult);
         } else {
+          this.logResponse(actionContext.response);
           return actionContext.response;
         }
       } catch (error) {
